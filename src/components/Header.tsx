@@ -62,11 +62,11 @@ export function Header({ date, onDateChange }: HeaderProps) {
             {/* Top Row: Navigation & Title */}
             <div className="relative flex items-center justify-between">
 
-                {/* Left Arrow - Week Navigation */}
+                {/* Left Arrow - Context Sensitive */}
                 <button
-                    onClick={handlePrevWeek}
+                    onClick={isWeekView ? handlePrevWeek : handlePrev}
                     className="p-2 text-gray-300 hover:text-gray-900 transition-colors z-10"
-                    aria-label="Previous week"
+                    aria-label={isWeekView ? "Previous week" : "Previous day"}
                 >
                     <ChevronLeft size={24} />
                 </button>
@@ -109,9 +109,9 @@ export function Header({ date, onDateChange }: HeaderProps) {
                         </button>
                     )}
                     <button
-                        onClick={handleNextWeek}
+                        onClick={isWeekView ? handleNextWeek : handleNext}
                         className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
-                        aria-label="Next week"
+                        aria-label={isWeekView ? "Next week" : "Next day"}
                     >
                         <ChevronRight size={24} />
                     </button>
@@ -128,7 +128,7 @@ export function Header({ date, onDateChange }: HeaderProps) {
                         className="overflow-hidden bg-gray-50/50 rounded-2xl border border-gray-100 p-4"
                     >
                         {/* Week Strip */}
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center mb-1">
                             {/* Prev Day Arrow */}
                             <button
                                 onClick={handlePrev}

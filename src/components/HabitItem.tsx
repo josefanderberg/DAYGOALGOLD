@@ -26,7 +26,10 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: Ha
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            className="group flex items-center gap-4 py-4 border-b border-gray-100 last:border-0 bg-white relative"
+            className={clsx(
+                "group flex items-center gap-4 py-4 border-b border-gray-100 last:border-0 bg-white relative",
+                habit.archived && "opacity-60 grayscale"
+            )}
         // Note: bg-white is important for drag opacity/feel
         >
             <div className="relative flex-shrink-0 cursor-pointer" onClick={onIncrement}>

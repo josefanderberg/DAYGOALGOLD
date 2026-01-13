@@ -88,16 +88,22 @@ export function HabitList({ date }: HabitListProps) {
                     className="flex flex-col"
                 >
                     <AnimatePresence initial={false}>
-                        {habits.map((habit) => (
-                            <HabitItem
-                                key={habit.id}
-                                habit={habit}
-                                progress={dayEntry.progress?.[habit.id] || 0}
-                                onIncrement={() => incrementHabit(date, habit.id)}
-                                onRemove={() => setDeletingHabit(habit)}
-                                onEdit={() => openEdit(habit)}
-                            />
-                        ))}
+                        {habits
+                            .filter(h => !h.archived || (dayEntry.progress?.[h.id] || 0) > 0)
+                            .sort((a, b) => {
+                                if (a.archived === b.archived) return 0;
+                                return a.archived ? 1 : -1;
+                            })
+                            .map((habit) => (
+                                <HabitItem
+                                    key={habit.id}
+                                    habit={habit}
+                                    progress={dayEntry.progress?.[habit.id] || 0}
+                                    onIncrement={() => incrementHabit(date, habit.id)}
+                                    onRemove={() => setDeletingHabit(habit)}
+                                    onEdit={() => openEdit(habit)}
+                                />
+                            ))}
                     </AnimatePresence>
                 </Reorder.Group>
 

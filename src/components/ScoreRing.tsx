@@ -6,7 +6,7 @@ interface ScoreRingProps {
 }
 
 export function ScoreRing({ date }: ScoreRingProps) {
-    const { habits, entries, getCreateDayEntry } = useHabits();
+    const { habits, entries, getCreateDayEntry, weeklyTasks } = useHabits();
 
     const entry = entries[date] || getCreateDayEntry(date);
 
@@ -31,6 +31,18 @@ export function ScoreRing({ date }: ScoreRingProps) {
     const hue = Math.min(percentage * 360, 360);
     const lightness = 50 + (percentage * 25); // 50% -> 75%
     const strokeColor = `hsl(${hue}, 100%, ${lightness}%)`;
+
+    // Filter important weekly tasks
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(d.setDate(diff)).toISOString().split('T')[0];
+
+    const importantTasks = weeklyTasks.filter(t =>
+        t.weekStart === weekStart &&
+        t.isImportant &&
+        !t.isCompleted
+    );
 
     return (
         <div className="flex flex-col items-center justify-center py-6">
@@ -74,6 +86,22 @@ export function ScoreRing({ date }: ScoreRingProps) {
                     <span className="block text-3xl font-bold text-gray-900 font-hand">{currentProgress}</span>
                     <span className="block text-xs font-medium text-gray-400 uppercase tracking-wider">of {totalTarget}</span>
                 </div>
+
+                {/* Important Tasks Floater */}
+                {importantTasks.length > 0 && (
+                    <div className="absolute left-[90px] top-2 flex flex-col gap-1 items-start">
+                        {importantTasks.map(task => (
+                            <motion.div
+                                key={task.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="text-[10px] font-bold text-gray-700 font-hand leading-tight bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap"
+                            >
+                                {task.title}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

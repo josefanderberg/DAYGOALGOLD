@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
-import { Plus, Trash2, Check } from 'lucide-react';
+import { Plus, Trash2, Check, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { format } from 'date-fns';
@@ -11,7 +11,7 @@ interface WeeklyTasksProps {
 }
 
 export function WeeklyTasks({ date }: WeeklyTasksProps) {
-    const { weeklyTasks, addWeeklyTask, toggleWeeklyTask, removeWeeklyTask } = useHabits();
+    const { weeklyTasks, addWeeklyTask, toggleWeeklyTask, removeWeeklyTask, toggleWeeklyTaskImportance } = useHabits();
     const { t, dateLocale } = useLanguage();
     const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -75,6 +75,18 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                             className="group flex items-center gap-3"
                         >
+                            <button
+                                onClick={() => toggleWeeklyTaskImportance(task.id)}
+                                className={clsx(
+                                    "p-1 text-gray-300 hover:text-yellow-400 transition-colors",
+                                    task.isImportant && "text-yellow-400 fill-yellow-400"
+                                )}
+                            >
+                                <div className={clsx("transition-transform duration-200", task.isImportant ? "scale-110" : "scale-100")}>
+                                    <Star size={16} fill={task.isImportant ? "currentColor" : "none"} />
+                                </div>
+                            </button>
+
                             <button
                                 onClick={() => toggleWeeklyTask(task.id)}
                                 className={clsx(

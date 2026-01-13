@@ -15,6 +15,7 @@ interface HabitContextType {
     getCreateDayEntry: (date: string) => DayEntry;
     addWeeklyTask: (title: string, date: string) => void;
     toggleWeeklyTask: (id: string) => void;
+    toggleWeeklyTaskImportance: (id: string) => void;
     removeWeeklyTask: (id: string) => void;
     moveHabit: (id: string, direction: 'up' | 'down') => void;
     reorderHabits: (newHabits: Habit[]) => void;
@@ -29,12 +30,21 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     const [weeklyTasks, setWeeklyTasks] = useLocalStorage<WeeklyTask[]>('jdih_weekly_tasks', []);
 
     const addHabit = (title: string, target: number = 1) => {
-        const newHabit: Habit = { id: uuidv4(), title, target };
+        const newHabit: Habit = { id: uuidv4(), title, target, archived: false };
         setHabits([...habits, newHabit]);
     };
 
     const removeHabit = (id: string) => {
-        setHabits(habits.filter((h) => h.id !== id));
+        // Check if habit has ever been used (progress > 0) in any entry
+        const hasHistory = Object.values(entries).some(entry => (entry.progress?.[id] || 0) > 0);
+
+        if (hasHistory) {
+            // Archive it
+            setHabits(habits.map(h => h.id === id ? { ...h, archived: true } : h));
+        } else {
+            // Hard delete
+            setHabits(habits.filter((h) => h.id !== id));
+        }
     };
 
     const updateHabit = (id: string, newTitle: string, newTarget?: number) => {
@@ -140,6 +150,10 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         setWeeklyTasks(weeklyTasks.map(t => t.id === id ? { ...t, isCompleted: !t.isCompleted } : t));
     };
 
+    const toggleWeeklyTaskImportance = (id: string) => {
+        setWeeklyTasks(weeklyTasks.map(t => t.id === id ? { ...t, isImportant: !t.isImportant } : t));
+    };
+
     const removeWeeklyTask = (id: string) => {
         setWeeklyTasks(weeklyTasks.filter(t => t.id !== id));
     };
@@ -165,6 +179,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 getCreateDayEntry,
                 addWeeklyTask,
                 toggleWeeklyTask,
+                toggleWeeklyTaskImportance,
                 removeWeeklyTask,
                 moveHabit,
                 reorderHabits,

@@ -2,12 +2,14 @@ export interface Habit {
     id: string;
     title: string;
     target: number; // Default 1
+    archived?: boolean;
 }
 export interface WeeklyTask {
     id: string;
     title: string;
     isCompleted: boolean;
     weekStart: string; // ISO Date string of the Monday
+    isImportant?: boolean;
 }
 
 export interface DayEntry {
