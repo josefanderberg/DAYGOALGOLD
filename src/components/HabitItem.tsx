@@ -10,9 +10,10 @@ interface HabitItemProps {
     onIncrement: () => void;
     onRemove: () => void;
     onEdit: () => void;
+    isEditMode: boolean;
 }
 
-export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: HabitItemProps) {
+export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, isEditMode }: HabitItemProps) {
     const isCompleted = progress >= (habit.target || 1);
     const target = habit.target || 1;
     const dragControls = useDragControls();
@@ -33,19 +34,42 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: Ha
         // Note: bg-white is important for drag opacity/feel
         >
             <div className="relative flex-shrink-0 cursor-pointer" onClick={onIncrement}>
-                {/* Container for Checkmark */}
-                <div className="w-8 h-8">
+                {/* Visual Progress: Overlapping Boxes */}
+                <div className="h-8 relative flex items-center justify-center min-w-[32px]">
                     {isCompleted ? (
                         <RainbowCheckmark count={progress} target={target} />
                     ) : (
-                        <div className={clsx(
-                            "w-8 h-8 border-2 rounded-lg flex items-center justify-center transition-all",
-                            progress > 0 ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                        )}>
-                            {target > 1 && (
-                                <span className={clsx("text-xs font-bold", progress > 0 ? "text-blue-600" : "text-gray-300")}>
-                                    {progress}/{target}
-                                </span>
+                        <div className="relative flex items-center">
+                            {/* Only show numeric if target is huge */}
+                            {target > 10 ? (
+                                <div className={clsx(
+                                    "w-8 h-8 border-2 rounded-lg flex items-center justify-center transition-all",
+                                    progress > 0 ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                                )}>
+                                    <span className={clsx("text-xs font-bold", progress > 0 ? "text-blue-600" : "text-gray-300")}>
+                                        {progress}/{target}
+                                    </span>
+                                </div>
+                            ) : (
+                                Array.from({ length: target }).map((_, i) => {
+                                    const isFilled = progress > i;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            className={clsx(
+                                                "w-6 h-6 rounded border-2 transition-all duration-300 flex-shrink-0",
+                                                isFilled
+                                                    ? "bg-blue-500 border-blue-600"
+                                                    : "bg-white border-gray-200"
+                                            )}
+                                            style={{
+                                                marginLeft: i === 0 ? 0 : '-18px', // Overlap 75% of 24px (18px)
+                                                zIndex: i // Ensure Left-to-Right stacking order (Right covers Left)
+                                            }}
+                                        />
+                                    )
+                                })
                             )}
                         </div>
                     )}
@@ -73,38 +97,40 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: Ha
                 </div>
             </div>
 
-            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                {/* Drag Handle */}
-                <div
-                    className="p-2 text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
-                    onPointerDown={(e) => dragControls.start(e)}
-                >
-                    <GripVertical size={16} />
-                </div>
+            {isEditMode && (
+                <div className="flex items-center gap-1">
+                    {/* Drag Handle */}
+                    <div
+                        className="p-2 text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
+                        onPointerDown={(e) => dragControls.start(e)}
+                    >
+                        <GripVertical size={16} />
+                    </div>
 
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit();
-                    }}
-                    className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
-                >
-                    {/* Pencil Icon */}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                    </svg>
-                </button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove();
-                    }}
-                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                >
-                    <Trash2 size={16} />
-                </button>
-            </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit();
+                        }}
+                        className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
+                    >
+                        {/* Pencil Icon */}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                            <path d="m15 5 4 4" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove();
+                        }}
+                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )}
         </Reorder.Item>
     );
 }

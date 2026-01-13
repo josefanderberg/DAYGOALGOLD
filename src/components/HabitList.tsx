@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { HabitItem } from './HabitItem';
-import { Plus } from 'lucide-react';
+import { Plus, Edit2, Check } from 'lucide-react';
 import { AnimatePresence, Reorder } from 'framer-motion';
 import { Modal } from './Modal';
 import { type Habit } from '../types';
@@ -34,6 +34,9 @@ export function HabitList({ date }: HabitListProps) {
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [editTarget, setEditTarget] = useState(1);
+
+    // Edit Mode state
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const dayEntry = getCreateDayEntry(date);
     // Calculate today's completed count mainly for header stats
@@ -74,7 +77,15 @@ export function HabitList({ date }: HabitListProps) {
         <>
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold font-hand text-gray-800">{t('yourRituals')}</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-bold font-hand text-gray-800">{t('yourRituals')}</h2>
+                        <button
+                            onClick={() => setIsEditMode(!isEditMode)}
+                            className="p-1.5 text-gray-300 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50"
+                        >
+                            {isEditMode ? <Check size={16} /> : <Edit2 size={16} />}
+                        </button>
+                    </div>
                     <span className="text-sm text-gray-400 font-sans font-medium">
                         {completedCount}/{habits.length}
                     </span>
@@ -98,6 +109,7 @@ export function HabitList({ date }: HabitListProps) {
                                 <HabitItem
                                     key={habit.id}
                                     habit={habit}
+                                    isEditMode={isEditMode}
                                     progress={dayEntry.progress?.[habit.id] || 0}
                                     onIncrement={() => incrementHabit(date, habit.id)}
                                     onRemove={() => setDeletingHabit(habit)}
@@ -107,13 +119,15 @@ export function HabitList({ date }: HabitListProps) {
                     </AnimatePresence>
                 </Reorder.Group>
 
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="mt-6 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-all group"
-                >
-                    <Plus size={18} className="group-hover:scale-110 transition-transform" />
-                    {t('addRitual')}
-                </button>
+                {isEditMode && (
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="mt-6 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-all group"
+                    >
+                        <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                        {t('addRitual')}
+                    </button>
+                )}
             </div>
 
             {/* Add Modal */}
