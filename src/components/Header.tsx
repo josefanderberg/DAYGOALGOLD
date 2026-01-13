@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks, subWeeks, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { useHabits } from '../context/HabitContext';
@@ -20,19 +20,19 @@ export function Header({ date, onDateChange }: HeaderProps) {
 
     // Context-sensitive Navigation
     const handlePrev = () => {
-        if (isWeekView) {
-            onDateChange(format(subWeeks(currentDate, 1), 'yyyy-MM-dd'));
-        } else {
-            onDateChange(format(subDays(currentDate, 1), 'yyyy-MM-dd'));
-        }
+        onDateChange(format(subDays(currentDate, 1), 'yyyy-MM-dd'));
     };
 
     const handleNext = () => {
-        if (isWeekView) {
-            onDateChange(format(addWeeks(currentDate, 1), 'yyyy-MM-dd'));
-        } else {
-            onDateChange(format(addDays(currentDate, 1), 'yyyy-MM-dd'));
-        }
+        onDateChange(format(addDays(currentDate, 1), 'yyyy-MM-dd'));
+    };
+
+    const handlePrevWeek = () => {
+        onDateChange(format(subWeeks(currentDate, 1), 'yyyy-MM-dd'));
+    };
+
+    const handleNextWeek = () => {
+        onDateChange(format(addWeeks(currentDate, 1), 'yyyy-MM-dd'));
     };
 
     const toggleWeekView = () => {
@@ -62,44 +62,43 @@ export function Header({ date, onDateChange }: HeaderProps) {
             {/* Top Row: Navigation & Title */}
             <div className="relative flex items-center justify-between">
 
-                {/* Left Arrow */}
+                {/* Left Arrow - Week Navigation */}
                 <button
-                    onClick={handlePrev}
-                    className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
-                    aria-label={isWeekView ? "Previous week" : "Previous day"}
+                    onClick={handlePrevWeek}
+                    className="p-2 text-gray-300 hover:text-gray-900 transition-colors z-10"
+                    aria-label="Previous week"
                 >
                     <ChevronLeft size={24} />
                 </button>
 
                 {/* Center: Title & Toggle */}
-                <button
-                    onClick={toggleWeekView}
-                    className="flex flex-col items-center group cursor-pointer"
-                >
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={isWeekView ? 'week' + date : 'day' + date}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex items-center gap-2"
-                        >
-                            <h1 className="text-xl font-bold tracking-tight text-gray-900 capitalize">
-                                {isWeekView
-                                    ? `${t('week')} ${format(currentDate, 'w', { locale: dateLocale })}`
-                                    : format(currentDate, 'EEEE, d MMMM', { locale: dateLocale })
-                                }
-                            </h1>
-                        </motion.div>
-                    </AnimatePresence>
-                    <div className="flex items-center gap-1 text-gray-400 mt-1 group-hover:text-gray-600 transition-colors">
-                        {isWeekView ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </div>
-                </button>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-full flex justify-center pointer-events-none">
+                    <button
+                        onClick={toggleWeekView}
+                        className="flex flex-col items-center group cursor-pointer pointer-events-auto"
+                    >
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={isWeekView ? 'week' + date : 'day' + date}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex items-center gap-2"
+                            >
+                                <h1 className="text-xl font-bold tracking-tight text-gray-900 capitalize whitespace-nowrap">
+                                    {isWeekView
+                                        ? `${t('week')} ${format(currentDate, 'w', { locale: dateLocale })}`
+                                        : format(currentDate, 'EEEE, d MMMM', { locale: dateLocale })
+                                    }
+                                </h1>
+                            </motion.div>
+                        </AnimatePresence>
+                    </button>
+                </div>
 
                 {/* Right Side: Today + Next Arrow */}
-                <div className="flex items-center">
+                <div className="flex items-center z-10">
                     {!isToday(currentDate) && (
                         <button
                             onClick={jumpToToday}
@@ -110,9 +109,9 @@ export function Header({ date, onDateChange }: HeaderProps) {
                         </button>
                     )}
                     <button
-                        onClick={handleNext}
+                        onClick={handleNextWeek}
                         className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
-                        aria-label={isWeekView ? "Next week" : "Next day"}
+                        aria-label="Next week"
                     >
                         <ChevronRight size={24} />
                     </button>
@@ -130,10 +129,11 @@ export function Header({ date, onDateChange }: HeaderProps) {
                     >
                         {/* Week Strip */}
                         <div className="flex justify-between items-center mb-4">
-                            {/* Prev Week Arrow */}
+                            {/* Prev Day Arrow */}
                             <button
                                 onClick={handlePrev}
                                 className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
+                                aria-label="Previous day"
                             >
                                 <ChevronLeft size={20} />
                             </button>
@@ -193,10 +193,11 @@ export function Header({ date, onDateChange }: HeaderProps) {
                                 );
                             })}
 
-                            {/* Next Week Arrow */}
+                            {/* Next Day Arrow */}
                             <button
                                 onClick={handleNext}
                                 className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
+                                aria-label="Next day"
                             >
                                 <ChevronRight size={20} />
                             </button>
