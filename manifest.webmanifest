@@ -1,0 +1,1 @@
+{"name":"DayGoal Gold","short_name":"DG Gold","description":"Track your daily habits and goals","start_url":"/DAYGOALGOLD/","display":"standalone","background_color":"#ffffff","theme_color":"#ffffff","lang":"en","scope":"/DAYGOALGOLD/","icons":[{"src":"pwa-192x192.png","sizes":"192x192","type":"image/png"},{"src":"pwa-512x512.png","sizes":"512x512","type":"image/png"}]}
