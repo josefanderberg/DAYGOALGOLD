@@ -47,7 +47,7 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-bold font-hand text-gray-800">{t('weeklyGoals')}</h3>
+                    <h3 className="text-lg font-bold font-hand text-gray-800">TO DO</h3>
                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">{weekRange}</p>
                 </div>
                 <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
@@ -76,27 +76,20 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                             className="group flex items-center gap-3"
                         >
                             <button
-                                onClick={() => toggleWeeklyTaskImportance(task.id)}
-                                className={clsx(
-                                    "p-1 text-gray-300 hover:text-yellow-400 transition-colors",
-                                    task.isImportant && "text-yellow-400 fill-yellow-400"
-                                )}
-                            >
-                                <div className={clsx("transition-transform duration-200", task.isImportant ? "scale-110" : "scale-100")}>
-                                    <Star size={16} fill={task.isImportant ? "currentColor" : "none"} />
-                                </div>
-                            </button>
-
-                            <button
                                 onClick={() => toggleWeeklyTask(task.id)}
                                 className={clsx(
                                     "w-5 h-5 rounded border flex items-center justify-center transition-all duration-200",
                                     task.isCompleted
-                                        ? "bg-green-500 border-green-500 text-white"
-                                        : "border-gray-300 hover:border-gray-400 text-transparent"
+                                        ? (task.isImportant ? "bg-yellow-400 border-yellow-400" : "bg-green-500 border-green-500")
+                                        : "border-gray-300 hover:border-gray-400 text-transparent",
+                                    task.isCompleted ? "text-white" : ""
                                 )}
                             >
-                                <Check size={12} strokeWidth={3} />
+                                {task.isCompleted && task.isImportant ? (
+                                    <Star size={12} fill="white" stroke="white" />
+                                ) : (
+                                    <Check size={12} strokeWidth={3} />
+                                )}
                             </button>
 
                             <span
@@ -109,12 +102,26 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                                 {task.title}
                             </span>
 
-                            <button
-                                onClick={() => removeWeeklyTask(task.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-300 hover:text-red-500 transition-all"
-                            >
-                                <Trash2 size={14} />
-                            </button>
+                            {/* Right Side Controls */}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => toggleWeeklyTaskImportance(task.id)}
+                                    className={clsx(
+                                        "p-1.5 text-gray-300 hover:text-yellow-400 transition-colors",
+                                        task.isImportant && "text-yellow-400 opacity-100" // Always show star if selected
+                                    )}
+                                    title="Mark as Important"
+                                >
+                                    <Star size={16} fill={task.isImportant ? "currentColor" : "none"} />
+                                </button>
+
+                                <button
+                                    onClick={() => removeWeeklyTask(task.id)}
+                                    className="p-1.5 text-gray-300 hover:text-red-500 transition-all"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </motion.div>
                     ))}
                 </AnimatePresence>

@@ -7,6 +7,10 @@ interface HabitContextType {
     habits: Habit[];
     entries: Record<string, DayEntry>;
     weeklyTasks: WeeklyTask[];
+    weeklyFocus: Record<string, string>;
+    updateWeeklyFocus: (date: string, text: string) => void;
+    weeklyReflections: Record<string, string>;
+    updateWeeklyReflections: (date: string, text: string) => void;
     addHabit: (title: string, target?: number) => void;
     removeHabit: (id: string) => void;
     updateHabit: (id: string, newTitle: string, newTarget?: number) => void;
@@ -28,6 +32,8 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     const [habits, setHabits] = useLocalStorage<Habit[]>('jdih_habits', INITIAL_HABITS);
     const [entries, setEntries] = useLocalStorage<Record<string, DayEntry>>('jdih_entries', {});
     const [weeklyTasks, setWeeklyTasks] = useLocalStorage<WeeklyTask[]>('jdih_weekly_tasks', []);
+    const [weeklyFocus, setWeeklyFocus] = useLocalStorage<Record<string, string>>('jdih_weekly_focus', {});
+    const [weeklyReflections, setWeeklyReflections] = useLocalStorage<Record<string, string>>('jdih_weekly_reflections', {});
 
     const addHabit = (title: string, target: number = 1) => {
         const newHabit: Habit = { id: uuidv4(), title, target, archived: false };
@@ -135,6 +141,22 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         return monday.toISOString().split('T')[0];
     };
 
+    const updateWeeklyFocus = (date: string, text: string) => {
+        const weekStart = getWeekStart(date);
+        setWeeklyFocus({
+            ...weeklyFocus,
+            [weekStart]: text
+        });
+    };
+
+    const updateWeeklyReflections = (date: string, text: string) => {
+        const weekStart = getWeekStart(date);
+        setWeeklyReflections({
+            ...weeklyReflections,
+            [weekStart]: text
+        });
+    };
+
     const addWeeklyTask = (title: string, date: string) => {
         const weekStart = getWeekStart(date);
         const newTask: WeeklyTask = {
@@ -177,6 +199,10 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 incrementHabit,
                 updateDayField,
                 getCreateDayEntry,
+                weeklyFocus,
+                updateWeeklyFocus,
+                weeklyReflections,
+                updateWeeklyReflections,
                 addWeeklyTask,
                 toggleWeeklyTask,
                 toggleWeeklyTaskImportance,

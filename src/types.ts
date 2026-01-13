@@ -27,14 +27,9 @@ export interface AppData {
 }
 
 export const INITIAL_HABITS: Habit[] = [
-    { id: '1', title: 'Wake up before 06.00', target: 1 },
-    { id: '2', title: 'Eat 3 balanced meals a day', target: 3 }, // Example multi-count
-    { id: '3', title: 'Walk 7,000 steps a day', target: 1 },
-    { id: '5', title: 'Get rid of something', target: 1 },
-    { id: '6', title: 'Meditate 12 minutes a day', target: 1 },
-    { id: '7', title: 'Publish one post a day', target: 1 },
-    { id: '8', title: '90 min of carving your path', target: 1 },
-    { id: '9', title: 'Train 3 times per week', target: 1 }, // This is per week, but daily logger usually just marks "Did train today"
-    { id: '10', title: 'In bed by 22:00', target: 1 },
-    { id: '11', title: '10 Pushups', target: 1 },
+    { id: '1', title: 'Gå upp före 06:00', target: 1 },
+    { id: '2', title: 'Ät 3 balanserade måltider', target: 3 },
+    { id: '3', title: 'Gå 7,000 steg', target: 1 },
+    { id: '4', title: 'Meditera 12 minuter', target: 1 },
+    { id: '5', title: 'I säng innan 22:00', target: 1 },
 ];

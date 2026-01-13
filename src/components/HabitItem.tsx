@@ -44,9 +44,9 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, isEd
                             {target > 10 ? (
                                 <div className={clsx(
                                     "w-8 h-8 border-2 rounded-lg flex items-center justify-center transition-all",
-                                    progress > 0 ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                                    progress > 0 ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
                                 )}>
-                                    <span className={clsx("text-xs font-bold", progress > 0 ? "text-blue-600" : "text-gray-300")}>
+                                    <span className={clsx("text-xs font-bold", progress > 0 ? "text-green-600" : "text-gray-300")}>
                                         {progress}/{target}
                                     </span>
                                 </div>
@@ -60,7 +60,7 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, isEd
                                             className={clsx(
                                                 "w-6 h-6 rounded border-2 transition-all duration-300 flex-shrink-0",
                                                 isFilled
-                                                    ? "bg-blue-500 border-blue-600"
+                                                    ? "bg-green-300 border-green-400"
                                                     : "bg-white border-gray-200"
                                             )}
                                             style={{

@@ -7,6 +7,7 @@ import { Modal } from './Modal';
 import { type Habit } from '../types';
 
 import { useLanguage } from '../context/LanguageContext';
+import { habitSuggestions } from '../data/habitSuggestions';
 
 interface HabitListProps {
     date: string;
@@ -143,7 +144,7 @@ export function HabitList({ date }: HabitListProps) {
                 }
             >
                 <div className="space-y-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('ritualName')}</label>
                         <input
                             autoFocus
@@ -153,6 +154,17 @@ export function HabitList({ date }: HabitListProps) {
                             onChange={(e) => setNewHabitTitle(e.target.value)}
                             className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900"
                         />
+                        <button
+                            onClick={() => {
+                                const randomHabit = habitSuggestions[Math.floor(Math.random() * habitSuggestions.length)];
+                                setNewHabitTitle(randomHabit.title);
+                                setNewHabitTarget(randomHabit.target);
+                            }}
+                            className="absolute right-2 top-8 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                            title="Random Suggestion"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M16 8h-2" /><path d="M8 8h2" /><path d="M12 16h.01" /><path d="M16 16h.01" /><path d="M8 16h.01" /><path d="M12 8h.01" /></svg>
+                        </button>
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('dailyTarget')}</label>

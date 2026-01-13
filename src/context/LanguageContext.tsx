@@ -54,7 +54,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguage] = useLocalStorage<Language>('jdih_lang', 'en');
+    const [language, setLanguage] = useLocalStorage<Language>('jdih_lang', 'sv');
 
     const t = (key: string) => {
         const item = dictionary[key];
