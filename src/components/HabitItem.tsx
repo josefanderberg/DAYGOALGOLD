@@ -10,10 +10,9 @@ interface HabitItemProps {
     onIncrement: () => void;
     onRemove: () => void;
     onEdit: () => void;
-    isEditMode: boolean;
 }
 
-export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, isEditMode }: HabitItemProps) {
+export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: HabitItemProps) {
     const isCompleted = progress >= (habit.target || 1);
     const target = habit.target || 1;
     const dragControls = useDragControls();
@@ -97,40 +96,39 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, isEd
                 </div>
             </div>
 
-            {isEditMode && (
-                <div className="flex items-center gap-1">
-                    {/* Drag Handle */}
-                    <div
-                        className="p-2 text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
-                        onPointerDown={(e) => dragControls.start(e)}
-                    >
-                        <GripVertical size={16} />
-                    </div>
-
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit();
-                        }}
-                        className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
-                    >
-                        {/* Pencil Icon */}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                            <path d="m15 5 4 4" />
-                        </svg>
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onRemove();
-                        }}
-                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                    >
-                        <Trash2 size={16} />
-                    </button>
+            {/* Hover Controls */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Drag Handle */}
+                <div
+                    className="p-2 text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"
+                    onPointerDown={(e) => dragControls.start(e)}
+                >
+                    <GripVertical size={16} />
                 </div>
-            )}
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit();
+                    }}
+                    className="p-2 text-gray-300 hover:text-gray-900 transition-colors"
+                >
+                    {/* Pencil Icon */}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                    </svg>
+                </button>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                    }}
+                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                >
+                    <Trash2 size={16} />
+                </button>
+            </div>
         </Reorder.Item>
     );
 }

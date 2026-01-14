@@ -42,6 +42,8 @@ const dictionary: Translations = {
     'resetConfirmTitle': { en: 'Reset Today?', sv: 'Nollställ Dagen?' },
     'resetConfirmBody': { en: 'This will clear all progress and reflections for this day. Are you sure?', sv: 'Detta kommer att radera alla framsteg och reflektioner för denna dag. Är du säker?' },
     'dailyActions': { en: 'Daily Actions', sv: 'Dagliga Åtgärder' },
+    'removeForToday': { en: 'Only Today', sv: 'Bara idag' },
+    'deleteForever': { en: 'Delete', sv: 'Radera' },
 };
 
 interface LanguageContextType {

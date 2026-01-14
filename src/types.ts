@@ -3,6 +3,7 @@ export interface Habit {
     title: string;
     target: number; // Default 1
     archived?: boolean;
+    specificDate?: string; // YYYY-MM-DD - If set, only visible on this date
 }
 export interface WeeklyTask {
     id: string;
@@ -16,6 +17,7 @@ export interface DayEntry {
     date: string; // YYYY-MM-DD
     completedHabits: string[]; // Deprecated but kept for migration if needed, or mapped
     progress: Record<string, number>; // habitId -> count
+    skippedHabits?: string[]; // IDs of habits skipped/hidden for this day
     todo: string;
     focus: string;
     reflections: string;

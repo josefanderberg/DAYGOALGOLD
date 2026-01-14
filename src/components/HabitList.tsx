@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { HabitItem } from './HabitItem';
-import { Plus, Edit2, Check } from 'lucide-react';
-import { AnimatePresence, Reorder } from 'framer-motion';
+import { Plus, Check } from 'lucide-react';
+import { Reorder } from 'framer-motion';
 import { Modal } from './Modal';
 import { type Habit } from '../types';
 
@@ -21,7 +21,8 @@ export function HabitList({ date }: HabitListProps) {
         incrementHabit,
         getCreateDayEntry,
         updateHabit,
-        reorderHabits
+        reorderHabits,
+        skipHabit
     } = useHabits();
     const { t } = useLanguage();
 
@@ -35,9 +36,6 @@ export function HabitList({ date }: HabitListProps) {
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [editTarget, setEditTarget] = useState(1);
-
-    // Edit Mode state
-    const [isEditMode, setIsEditMode] = useState(false);
 
     const dayEntry = getCreateDayEntry(date);
     // Calculate today's completed count mainly for header stats
@@ -54,6 +52,9 @@ export function HabitList({ date }: HabitListProps) {
 
     const confirmDelete = () => {
         if (deletingHabit) {
+            // If we delete forever, we also want to hide it from today's view immediately
+            // regardless of whether it has progress or not.
+            skipHabit(date, deletingHabit.id);
             removeHabit(deletingHabit.id);
             setDeletingHabit(null);
         }
@@ -74,61 +75,66 @@ export function HabitList({ date }: HabitListProps) {
         setEditTarget(habit.target || 1);
     };
 
+    // Filter habits for Reorder.Group consistency (removed sort to fix jumping)
+    const visibleHabits = habits
+        .filter(h => {
+            const isSkipped = dayEntry.skippedHabits?.includes(h.id);
+            if (isSkipped) return false;
+            if (h.specificDate && h.specificDate !== dayEntry.date) return false;
+            return !h.archived || (dayEntry.progress?.[h.id] || 0) > 0;
+        });
+
+    const handleReorder = (newOrder: Habit[]) => {
+        // newOrder only contains visible habits.
+        // We need to keep the invisible habits (e.g. archived ones with no progress today)
+        // and append them or keep them in the state.
+        const visibleIds = new Set(newOrder.map(h => h.id));
+        const hiddenHabits = habits.filter(h => !visibleIds.has(h.id));
+
+        reorderHabits([...newOrder, ...hiddenHabits]);
+    };
+
     return (
         <>
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <h2 className="text-xl font-bold font-hand text-gray-800">{t('yourRituals')}</h2>
-                        <button
-                            onClick={() => setIsEditMode(!isEditMode)}
-                            className="p-1.5 text-gray-300 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50"
-                        >
-                            {isEditMode ? <Check size={16} /> : <Edit2 size={16} />}
-                        </button>
                     </div>
-                    <span className="text-sm text-gray-400 font-sans font-medium">
-                        {completedCount}/{habits.length}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                        <Check size={14} className="text-gray-400" strokeWidth={3} />
+                        <span className="text-sm text-gray-500 font-sans">
+                            {completedCount}/{visibleHabits.length}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Reorder Group replaces simple flex div */}
                 <Reorder.Group
                     axis="y"
-                    values={habits}
-                    onReorder={reorderHabits}
+                    values={visibleHabits}
+                    onReorder={handleReorder}
                     className="flex flex-col"
                 >
-                    <AnimatePresence initial={false}>
-                        {habits
-                            .filter(h => !h.archived || (dayEntry.progress?.[h.id] || 0) > 0)
-                            .sort((a, b) => {
-                                if (a.archived === b.archived) return 0;
-                                return a.archived ? 1 : -1;
-                            })
-                            .map((habit) => (
-                                <HabitItem
-                                    key={habit.id}
-                                    habit={habit}
-                                    isEditMode={isEditMode}
-                                    progress={dayEntry.progress?.[habit.id] || 0}
-                                    onIncrement={() => incrementHabit(date, habit.id)}
-                                    onRemove={() => setDeletingHabit(habit)}
-                                    onEdit={() => openEdit(habit)}
-                                />
-                            ))}
-                    </AnimatePresence>
+                    {visibleHabits.map((habit) => (
+                        <HabitItem
+                            key={habit.id}
+                            habit={habit}
+                            progress={dayEntry.progress?.[habit.id] || 0}
+                            onIncrement={() => incrementHabit(date, habit.id)}
+                            onRemove={() => setDeletingHabit(habit)}
+                            onEdit={() => openEdit(habit)}
+                        />
+                    ))}
                 </Reorder.Group>
 
-                {isEditMode && (
-                    <button
-                        onClick={() => setIsAdding(true)}
-                        className="mt-6 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-all group"
-                    >
-                        <Plus size={18} className="group-hover:scale-110 transition-transform" />
-                        {t('addRitual')}
-                    </button>
-                )}
+                <button
+                    onClick={() => setIsAdding(true)}
+                    className="mt-6 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-all group"
+                >
+                    <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                    {t('addRitual')}
+                </button>
             </div>
 
             {/* Add Modal */}
@@ -139,7 +145,17 @@ export function HabitList({ date }: HabitListProps) {
                 footer={
                     <>
                         <button onClick={() => setIsAdding(false)} className="px-4 py-2 text-sm text-gray-600">{t('cancel')}</button>
-                        <button onClick={handleAddSubmit} className="px-4 py-2 text-sm text-white bg-gray-900 rounded-lg">{t('create')}</button>
+                        <div className="flex gap-2">
+                            <button onClick={() => {
+                                if (newHabitTitle.trim()) {
+                                    addHabit(newHabitTitle.trim(), newHabitTarget, date);
+                                    setNewHabitTitle('');
+                                    setNewHabitTarget(1);
+                                    setIsAdding(false);
+                                }
+                            }} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg h-full">{t('removeForToday')}</button>
+                            <button onClick={handleAddSubmit} className="px-4 py-2 text-sm text-white bg-gray-900 rounded-lg">{t('create')}</button>
+                        </div>
                     </>
                 }
             >
@@ -154,17 +170,6 @@ export function HabitList({ date }: HabitListProps) {
                             onChange={(e) => setNewHabitTitle(e.target.value)}
                             className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900"
                         />
-                        <button
-                            onClick={() => {
-                                const randomHabit = habitSuggestions[Math.floor(Math.random() * habitSuggestions.length)];
-                                setNewHabitTitle(randomHabit.title);
-                                setNewHabitTarget(randomHabit.target);
-                            }}
-                            className="absolute right-2 top-8 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
-                            title="Random Suggestion"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M16 8h-2" /><path d="M8 8h2" /><path d="M12 16h.01" /><path d="M16 16h.01" /><path d="M8 16h.01" /><path d="M12 8h.01" /></svg>
-                        </button>
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('dailyTarget')}</label>
@@ -177,6 +182,26 @@ export function HabitList({ date }: HabitListProps) {
                                 className="w-24 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900"
                             />
                             <span className="text-sm text-gray-500">{t('timesPerDay')}</span>
+
+                            <div className="flex-1" />
+
+                            <button
+                                onClick={() => {
+                                    const randomHabit = habitSuggestions[Math.floor(Math.random() * habitSuggestions.length)];
+                                    setNewHabitTitle(randomHabit.title);
+                                    setNewHabitTarget(randomHabit.target);
+                                }}
+                                className="px-3 py-2 text-xs font-bold uppercase tracking-wider border-2 border-transparent rounded-md transition-all hover:scale-105 active:scale-95 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10"
+                                style={{
+                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #ec4899, #8b5cf6, #3b82f6)',
+                                    backgroundOrigin: 'border-box',
+                                    backgroundClip: 'padding-box, border-box',
+                                }}
+                            >
+                                <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent animate-pulse">
+                                    Random
+                                </span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -195,12 +220,25 @@ export function HabitList({ date }: HabitListProps) {
                         >
                             {t('cancel')}
                         </button>
-                        <button
-                            onClick={confirmDelete}
-                            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
-                        >
-                            {t('delete')}
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    if (deletingHabit) {
+                                        skipHabit(date, deletingHabit.id);
+                                        setDeletingHabit(null);
+                                    }
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                {t('removeForToday')}
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {t('deleteForever')}
+                            </button>
+                        </div>
                     </>
                 }
             >

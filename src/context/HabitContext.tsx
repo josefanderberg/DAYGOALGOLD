@@ -11,8 +11,9 @@ interface HabitContextType {
     updateWeeklyFocus: (date: string, text: string) => void;
     weeklyReflections: Record<string, string>;
     updateWeeklyReflections: (date: string, text: string) => void;
-    addHabit: (title: string, target?: number) => void;
+    addHabit: (title: string, target?: number, specificDate?: string) => void;
     removeHabit: (id: string) => void;
+    skipHabit: (date: string, habitId: string) => void;
     updateHabit: (id: string, newTitle: string, newTarget?: number) => void;
     incrementHabit: (date: string, habitId: string) => void;
     updateDayField: (date: string, field: keyof DayEntry, value: string) => void;
@@ -35,8 +36,8 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     const [weeklyFocus, setWeeklyFocus] = useLocalStorage<Record<string, string>>('jdih_weekly_focus', {});
     const [weeklyReflections, setWeeklyReflections] = useLocalStorage<Record<string, string>>('jdih_weekly_reflections', {});
 
-    const addHabit = (title: string, target: number = 1) => {
-        const newHabit: Habit = { id: uuidv4(), title, target, archived: false };
+    const addHabit = (title: string, target: number = 1, specificDate?: string) => {
+        const newHabit: Habit = { id: uuidv4(), title, target, archived: false, specificDate };
         setHabits([...habits, newHabit]);
     };
 
@@ -50,6 +51,17 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         } else {
             // Hard delete
             setHabits(habits.filter((h) => h.id !== id));
+        }
+    };
+
+    const skipHabit = (date: string, habitId: string) => {
+        const entry = getCreateDayEntry(date);
+        const currentSkipped = entry.skippedHabits || [];
+        if (!currentSkipped.includes(habitId)) {
+            setEntries({
+                ...entries,
+                [date]: { ...entry, skippedHabits: [...currentSkipped, habitId] }
+            });
         }
     };
 
@@ -89,6 +101,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
             date,
             completedHabits: [],
             progress: {},
+            skippedHabits: [],
             todo: '',
             focus: '',
             reflections: '',
@@ -195,6 +208,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 weeklyTasks,
                 addHabit,
                 removeHabit,
+                skipHabit,
                 updateHabit,
                 incrementHabit,
                 updateDayField,

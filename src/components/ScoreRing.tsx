@@ -10,12 +10,19 @@ export function ScoreRing({ date }: ScoreRingProps) {
 
     const entry = entries[date] || getCreateDayEntry(date);
 
-    // Calculate total target count
-    const totalTarget = habits.reduce((acc, h) => acc + (h.target || 1), 0);
+    // Calculate total target count (exclude archived habits unless they have progress this day)
+    const totalTarget = habits.reduce((acc, h) => {
+        const hasProgress = (entry.progress?.[h.id] || 0) > 0;
+        if (h.archived && !hasProgress) return acc;
+        return acc + (h.target || 1);
+    }, 0);
 
     // Calculate current progress (capped at target for the ring)
     const currentProgress = habits.reduce((acc, h) => {
         const prog = entry.progress?.[h.id] || 0;
+        // If archived and no progress, it shouldn't count (consistent with totalTarget)
+        if (h.archived && prog === 0) return acc;
+
         return acc + Math.min(prog, h.target || 1);
     }, 0);
 
