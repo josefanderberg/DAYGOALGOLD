@@ -13,11 +13,17 @@ export interface WeeklyTask {
     isImportant?: boolean;
 }
 
+export interface Note {
+    id: string;
+    text: string;
+}
+
 export interface DayEntry {
     date: string; // YYYY-MM-DD
     completedHabits: string[]; // Deprecated but kept for migration if needed, or mapped
     progress: Record<string, number>; // habitId -> count
     skippedHabits?: string[]; // IDs of habits skipped/hidden for this day
+    notes?: Note[];
     todo: string;
     focus: string;
     reflections: string;

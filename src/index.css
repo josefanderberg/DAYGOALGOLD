@@ -5,8 +5,11 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
   body {
-    @apply font-sans bg-gray-50 text-gray-900 antialiased overflow-x-hidden;
+    @apply font-sans bg-gray-50 text-gray-900 antialiased;
+    /* overscroll-behavior: none; - Removed to test if it helps with address bar hiding */
   }
 }
 

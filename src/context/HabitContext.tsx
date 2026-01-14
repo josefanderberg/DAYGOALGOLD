@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { type Habit, type DayEntry, type WeeklyTask, INITIAL_HABITS } from '../types';
+import { type Habit, type DayEntry, type WeeklyTask, type Note, INITIAL_HABITS } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface HabitContextType {
@@ -24,6 +24,9 @@ interface HabitContextType {
     removeWeeklyTask: (id: string) => void;
     moveHabit: (id: string, direction: 'up' | 'down') => void;
     reorderHabits: (newHabits: Habit[]) => void;
+    addNote: (date: string, text: string) => void;
+    removeNote: (date: string, noteId: string) => void;
+    reorderNotes: (date: string, newNotes: Note[]) => void;
     resetDay: (date: string) => void;
 }
 
@@ -102,6 +105,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
             completedHabits: [],
             progress: {},
             skippedHabits: [],
+            notes: [],
             todo: '',
             focus: '',
             reflections: '',
@@ -142,6 +146,31 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         setEntries({
             ...entries,
             [date]: { ...entry, [field]: value },
+        });
+    };
+
+    const addNote = (date: string, text: string) => {
+        const entry = getCreateDayEntry(date);
+        const newNote: Note = { id: uuidv4(), text };
+        setEntries({
+            ...entries,
+            [date]: { ...entry, notes: [...(entry.notes || []), newNote] }
+        });
+    };
+
+    const removeNote = (date: string, noteId: string) => {
+        const entry = getCreateDayEntry(date);
+        setEntries({
+            ...entries,
+            [date]: { ...entry, notes: (entry.notes || []).filter(n => n.id !== noteId) }
+        });
+    };
+
+    const reorderNotes = (date: string, newNotes: Note[]) => {
+        const entry = getCreateDayEntry(date);
+        setEntries({
+            ...entries,
+            [date]: { ...entry, notes: newNotes }
         });
     };
 
@@ -223,6 +252,9 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 removeWeeklyTask,
                 moveHabit,
                 reorderHabits,
+                addNote,
+                removeNote,
+                reorderNotes,
                 resetDay
             }}
         >

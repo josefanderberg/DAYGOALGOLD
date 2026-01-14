@@ -13,15 +13,17 @@ function App() {
 
   return (
     <LanguageProvider>
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-8">
-        {/* Mobile-first container: Full width on mobile, constrained on desktop */}
-        <div className="w-full h-[100dvh] md:h-[850px] md:w-[420px] bg-gray-50 md:rounded-3xl md:shadow-2xl overflow-hidden flex flex-col border border-gray-200/50 relative">
+      <div className="min-h-screen bg-gray-100 flex md:items-center md:justify-center p-0 md:p-8">
+        {/* Mobile-first container: Native scroll on mobile, constrained phone-box on desktop */}
+        <div className="w-full bg-gray-50 md:h-[850px] md:w-[420px] md:rounded-3xl md:shadow-2xl md:overflow-hidden md:flex md:flex-col md:border md:border-gray-200/50 relative">
 
-          <div className="flex-shrink-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
             <Header date={selectedDate} onDateChange={setSelectedDate} />
           </div>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-6 no-scrollbar pb-20">
+          {/* Main Content - Native scroll on mobile (default), internal scroll on desktop */}
+          <main className="md:flex-1 md:overflow-y-auto md:overflow-x-hidden p-6 space-y-6 pb-24 md:pb-6 no-scrollbar">
             <ScoreRing date={selectedDate} />
             <HabitList date={selectedDate} />
             <DaySections date={selectedDate} />

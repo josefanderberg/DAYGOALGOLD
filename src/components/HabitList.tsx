@@ -29,13 +29,13 @@ export function HabitList({ date }: HabitListProps) {
     // Modals state
     const [isAdding, setIsAdding] = useState(false);
     const [newHabitTitle, setNewHabitTitle] = useState('');
-    const [newHabitTarget, setNewHabitTarget] = useState(1);
+    const [newHabitTarget, setNewHabitTarget] = useState<number | string>(1);
 
     const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [editTitle, setEditTitle] = useState('');
-    const [editTarget, setEditTarget] = useState(1);
+    const [editTarget, setEditTarget] = useState<number | string>(1);
 
     const dayEntry = getCreateDayEntry(date);
     // Calculate today's completed count mainly for header stats
@@ -43,7 +43,7 @@ export function HabitList({ date }: HabitListProps) {
 
     const handleAddSubmit = () => {
         if (newHabitTitle.trim()) {
-            addHabit(newHabitTitle.trim(), newHabitTarget);
+            addHabit(newHabitTitle.trim(), Number(newHabitTarget) || 1);
             setNewHabitTitle('');
             setNewHabitTarget(1);
             setIsAdding(false);
@@ -62,7 +62,7 @@ export function HabitList({ date }: HabitListProps) {
 
     const saveEdit = () => {
         if (editingHabit && editTitle.trim()) {
-            updateHabit(editingHabit.id, editTitle.trim(), editTarget);
+            updateHabit(editingHabit.id, editTitle.trim(), Number(editTarget) || 1);
             setEditingHabit(null);
             setEditTitle('');
             setEditTarget(1);
@@ -148,7 +148,7 @@ export function HabitList({ date }: HabitListProps) {
                         <div className="flex gap-2">
                             <button onClick={() => {
                                 if (newHabitTitle.trim()) {
-                                    addHabit(newHabitTitle.trim(), newHabitTarget, date);
+                                    addHabit(newHabitTitle.trim(), Number(newHabitTarget) || 1, date);
                                     setNewHabitTitle('');
                                     setNewHabitTarget(1);
                                     setIsAdding(false);
@@ -178,7 +178,15 @@ export function HabitList({ date }: HabitListProps) {
                                 type="number"
                                 min="1"
                                 value={newHabitTarget}
-                                onChange={(e) => setNewHabitTarget(parseInt(e.target.value) || 1)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setNewHabitTarget(val === '' ? '' : parseInt(val));
+                                }}
+                                onBlur={() => {
+                                    if (newHabitTarget === '' || Number(newHabitTarget) < 1) {
+                                        setNewHabitTarget(1);
+                                    }
+                                }}
                                 className="w-24 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900"
                             />
                             <span className="text-sm text-gray-500">{t('timesPerDay')}</span>
@@ -287,7 +295,15 @@ export function HabitList({ date }: HabitListProps) {
                                 type="number"
                                 min="1"
                                 value={editTarget}
-                                onChange={(e) => setEditTarget(parseInt(e.target.value) || 1)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setEditTarget(val === '' ? '' : parseInt(val));
+                                }}
+                                onBlur={() => {
+                                    if (editTarget === '' || Number(editTarget) < 1) {
+                                        setEditTarget(1);
+                                    }
+                                }}
                                 className="w-24 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
                             />
                             <span className="text-sm text-gray-500">{t('timesPerDay')}</span>
