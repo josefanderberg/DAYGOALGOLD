@@ -1,13 +1,12 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useHabits } from '../context/HabitContext';
-import { Heart } from 'lucide-react';
 
 interface ScoreRingProps {
     date: string;
 }
 
 export function ScoreRing({ date }: ScoreRingProps) {
-    const { habits, entries, getCreateDayEntry, weeklyTasks, tempMessage } = useHabits();
+    const { habits, entries, getCreateDayEntry, weeklyTasks } = useHabits();
 
     // Calculate total target count
     const entry = entries[date] || getCreateDayEntry(date);
@@ -95,40 +94,23 @@ export function ScoreRing({ date }: ScoreRingProps) {
                     <span className="block text-xs font-medium text-gray-400 uppercase tracking-wider">of {totalTarget}</span>
                 </div>
 
-                {/* Temporary Notification Message (Left Side) */}
-                <AnimatePresence>
-                    {tempMessage && (
+                {/* Right Side: Messages Space (Start at left-[90px] which is to the right of the ring) */}
+                <div className="absolute left-[90px] top-4 flex flex-col items-start gap-1 z-20">
+                    {regularTasks.map(task => (
                         <motion.div
+                            key={task.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute left-[90px] top-2 flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm z-20 whitespace-nowrap"
+                            className="flex items-center bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap"
                         >
-                            <Heart size={10} className="text-red-400 fill-red-400" />
+                            {/* Invisible spacer to match the height if the heart impacts it, 
+                                though text-10px and Heart-10px should be similar. 
+                                ensuring flex items-center strictly centers the text vertically. */}
                             <span className="text-[10px] font-bold text-gray-700 font-hand leading-tight">
-                                {tempMessage}
+                                {task.title}
                             </span>
                         </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Right Side: Regular Tasks (Previously Notes Position) */}
-                {/* Right-[120px] moves it well clear of the circle */}
-                <div className="absolute right-[120px] top-4 flex flex-col gap-1 items-end z-20">
-                    <div className="flex flex-col items-end gap-2">
-                        {regularTasks.map(task => (
-                            <motion.div
-                                key={task.id}
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="group relative"
-                            >
-                                <div className="text-[10px] font-bold text-gray-600 font-hand leading-tight bg-white px-3 py-1.5 rounded-br-none rounded-xl border border-gray-200 shadow-sm whitespace-nowrap flex items-center gap-2 transition-transform hover:scale-105">
-                                    {task.title}
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </div>
         </div>

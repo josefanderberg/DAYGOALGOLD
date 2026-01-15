@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { HabitList } from './components/HabitList';
 import { DaySections } from './components/DaySections';
 import { ScoreRing } from './components/ScoreRing';
+import { LoveMessageOverlay } from './components/LoveMessageOverlay';
 
 import { LanguageProvider } from './context/LanguageContext';
 import { Footer } from './components/Footer';
@@ -23,7 +24,8 @@ function App() {
           </div>
 
           {/* Main Content - Native scroll on mobile (default), internal scroll on desktop */}
-          <main className="md:flex-1 md:overflow-y-auto md:overflow-x-hidden p-6 space-y-6 pb-24 md:pb-6 no-scrollbar">
+          <main className="md:flex-1 md:overflow-y-auto md:overflow-x-hidden p-6 space-y-6 pb-24 md:pb-6 no-scrollbar relative">
+            <LoveMessageOverlay />
             <ScoreRing date={selectedDate} />
             <HabitList date={selectedDate} />
             <DaySections date={selectedDate} />

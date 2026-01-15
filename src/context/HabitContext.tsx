@@ -65,7 +65,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
             showTemporaryMessage(randomTask.title);
         } else {
             // Fallback if no Love To Do tasks are completed yet
-            showTemporaryMessage("Klara en Love To Do! ❤️");
+            showTemporaryMessage("Bra jobbat!");
         }
     };
 
