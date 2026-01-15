@@ -43,7 +43,7 @@ export function ScoreRing({ date }: ScoreRingProps) {
         t.weekStart === weekStart && t.isCompleted
     );
 
-    const regularTasks = currentWeekTasks.filter(t => !t.isImportant);
+    const regularTasks = currentWeekTasks.filter(t => !t.isImportant && !t.starredDates?.includes(date));
 
     return (
         <div className="flex flex-col items-center justify-center py-6">

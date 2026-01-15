@@ -58,9 +58,9 @@ export function Header({ date, onDateChange }: HeaderProps) {
     };
 
     return (
-        <header className="px-4 py-4 flex flex-col gap-4 transition-all duration-300">
+        <header className="px-4 py-2 flex flex-col transition-all duration-300">
             {/* Top Row: Navigation & Title */}
-            <div className="relative flex items-center justify-between">
+            <div className="relative flex items-center justify-between h-12">
 
                 {/* Left Arrow - Context Sensitive */}
                 <button
@@ -118,93 +118,100 @@ export function Header({ date, onDateChange }: HeaderProps) {
                 </div>
             </div>
 
-            {/* Week View Panel */}
-            <AnimatePresence>
-                {isWeekView && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-gray-50/50 rounded-2xl border border-gray-100 p-4"
-                    >
-                        {/* Week Strip */}
-                        <div className="flex justify-between items-center mb-1">
-                            {/* Prev Day Arrow */}
-                            <button
-                                onClick={handlePrev}
-                                className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
-                                aria-label="Previous day"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
+            {/* Week View Panel - Always rendered for smooth sliding, memory cost is negligible */}
+            <motion.div
+                initial={false}
+                animate={{
+                    height: isWeekView ? 'auto' : 0,
+                    opacity: isWeekView ? 1 : 0,
+                    marginBottom: isWeekView ? 16 : 0,
+                    marginTop: isWeekView ? 16 : 0
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="overflow-hidden bg-gray-50/50 rounded-2xl border border-gray-100"
+                style={{ borderWidth: isWeekView ? 1 : 0 }} // Hide border when closed
+            >
+                <div className="p-4">
+                    {/* Week Strip */}
+                    <div className="flex justify-between items-center mb-1">
+                        {/* Prev Day Arrow */}
+                        <button
+                            onClick={handlePrev}
+                            className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
+                            aria-label="Previous day"
+                            tabIndex={isWeekView ? 0 : -1}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
 
-                            {weekDays.map((day) => {
-                                const dayStr = format(day, 'yyyy-MM-dd');
-                                const isSelected = isSameDay(day, currentDate);
-                                const score = getDayScore(dayStr);
+                        {weekDays.map((day) => {
+                            const dayStr = format(day, 'yyyy-MM-dd');
+                            const isSelected = isSameDay(day, currentDate);
+                            const score = getDayScore(dayStr);
 
-                                return (
-                                    <button
-                                        key={day.toISOString()}
-                                        onClick={() => onDateChange(dayStr)}
-                                        className="flex flex-col items-center justify-center w-10 h-16 relative group"
-                                    >
-                                        <span className={clsx(
-                                            "text-[10px] font-bold uppercase mb-1 transition-colors",
-                                            isSelected ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"
-                                        )}>
-                                            {format(day, 'EEE', { locale: dateLocale })}
-                                        </span>
-                                        <span className={clsx(
-                                            "text-sm font-bold z-10 transition-colors",
-                                            isSelected ? "text-gray-900" : "text-gray-500 group-hover:text-gray-800"
-                                        )}>
-                                            {format(day, 'd', { locale: dateLocale })}
-                                        </span>
+                            return (
+                                <button
+                                    key={day.toISOString()}
+                                    onClick={() => onDateChange(dayStr)}
+                                    className="flex flex-col items-center justify-center w-10 h-16 relative group"
+                                    tabIndex={isWeekView ? 0 : -1}
+                                >
+                                    <span className={clsx(
+                                        "text-[10px] font-bold uppercase mb-1 transition-colors",
+                                        isSelected ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"
+                                    )}>
+                                        {format(day, 'EEE', { locale: dateLocale })}
+                                    </span>
+                                    <span className={clsx(
+                                        "text-sm font-bold z-10 transition-colors",
+                                        isSelected ? "text-gray-900" : "text-gray-500 group-hover:text-gray-800"
+                                    )}>
+                                        {format(day, 'd', { locale: dateLocale })}
+                                    </span>
 
-                                        {/* Daily Score Indicator */}
-                                        <div className="mt-1 h-3 flex items-center justify-center">
-                                            {score > 0 && (
-                                                <span className={clsx(
-                                                    "text-[10px] font-bold",
-                                                    isSelected ? "text-gray-800" : "text-blue-500"
-                                                )}>
-                                                    {score}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Hand-drawn circle for selected state */}
-                                        {isSelected && (
-                                            <svg className="absolute inset-0 w-full h-full text-red-500 -z-0 scale-125" viewBox="0 0 40 64" preserveAspectRatio="none">
-                                                <motion.path
-                                                    d="M 2 32 C 2 12 38 12 38 32 C 38 52 2 52 2 32"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.5"
-                                                    strokeLinecap="round"
-                                                    initial={{ pathLength: 0 }}
-                                                    animate={{ pathLength: 1 }}
-                                                    transition={{ duration: 0.3 }}
-                                                />
-                                            </svg>
+                                    {/* Daily Score Indicator */}
+                                    <div className="mt-1 h-3 flex items-center justify-center">
+                                        {score > 0 && (
+                                            <span className={clsx(
+                                                "text-[10px] font-bold",
+                                                isSelected ? "text-gray-800" : "text-blue-500"
+                                            )}>
+                                                {score}
+                                            </span>
                                         )}
-                                    </button>
-                                );
-                            })}
+                                    </div>
 
-                            {/* Next Day Arrow */}
-                            <button
-                                onClick={handleNext}
-                                className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
-                                aria-label="Next day"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                    {/* Hand-drawn circle for selected state */}
+                                    {isSelected && (
+                                        <svg className="absolute inset-0 w-full h-full text-red-500 -z-0 scale-125" viewBox="0 0 40 64" preserveAspectRatio="none">
+                                            <motion.path
+                                                d="M 2 32 C 2 12 38 12 38 32 C 38 52 2 52 2 32"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2.5"
+                                                strokeLinecap="round"
+                                                initial={{ pathLength: 0 }}
+                                                animate={{ pathLength: 1 }}
+                                                transition={{ duration: 0.3 }}
+                                            />
+                                        </svg>
+                                    )}
+                                </button>
+                            );
+                        })}
+
+                        {/* Next Day Arrow */}
+                        <button
+                            onClick={handleNext}
+                            className="p-1 text-gray-300 hover:text-gray-900 transition-colors"
+                            aria-label="Next day"
+                            tabIndex={isWeekView ? 0 : -1}
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
         </header>
     );
 }

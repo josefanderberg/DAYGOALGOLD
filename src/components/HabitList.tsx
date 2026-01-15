@@ -38,6 +38,7 @@ export function HabitList({ date }: HabitListProps) {
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [editTarget, setEditTarget] = useState<number | string>(1);
+    const [isEditingList, setIsEditingList] = useState(false);
 
     const dayEntry = getCreateDayEntry(date);
     // Calculate today's completed count mainly for header stats
@@ -45,7 +46,8 @@ export function HabitList({ date }: HabitListProps) {
 
     const handleAddSubmit = () => {
         if (newHabitTitle.trim()) {
-            addHabit(newHabitTitle.trim(), Number(newHabitTarget) || 1);
+            // General habits start from the current date appearing forward
+            addHabit(newHabitTitle.trim(), Number(newHabitTarget) || 1, undefined, date);
             setNewHabitTitle('');
             setNewHabitTarget(1);
             setIsAdding(false);
@@ -57,7 +59,7 @@ export function HabitList({ date }: HabitListProps) {
             // If we delete forever, we also want to hide it from today's view immediately
             // regardless of whether it has progress or not.
             skipHabit(date, deletingHabit.id);
-            removeHabit(deletingHabit.id);
+            removeHabit(deletingHabit.id, date);
             setDeletingHabit(null);
         }
     };
@@ -83,7 +85,18 @@ export function HabitList({ date }: HabitListProps) {
             const isSkipped = dayEntry.skippedHabits?.includes(h.id);
             if (isSkipped) return false;
             if (h.specificDate && h.specificDate !== dayEntry.date) return false;
-            return !h.archived || (dayEntry.progress?.[h.id] || 0) > 0;
+            // If habit has a start date, it shouldn't show up before that date
+            if (h.startDate && dayEntry.date < h.startDate) return false;
+
+            // If habit is archived, check if it's within its valid date range (endDate)
+            if (h.archived) {
+                // If we are viewing a date ON or BEFORE the end date, keep it visible
+                // OR fallback to "history exists" progress check if endDate is missing (legacy)
+                if (h.endDate && dayEntry.date <= h.endDate) return true;
+                return (dayEntry.progress?.[h.id] || 0) > 0;
+            }
+
+            return true;
         });
 
     const handleReorder = (newOrder: Habit[]) => {
@@ -132,6 +145,7 @@ export function HabitList({ date }: HabitListProps) {
                         <HabitItem
                             key={habit.id}
                             habit={habit}
+                            isEditing={isEditingList}
                             progress={dayEntry.progress?.[habit.id] || 0}
                             onIncrement={() => handleIncrement(habit)}
                             onReset={() => setHabitProgress(date, habit.id, 0)}

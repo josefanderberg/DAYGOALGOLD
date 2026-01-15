@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useRef, useEffect, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { type Habit, type DayEntry, type WeeklyTask, type Note, INITIAL_HABITS } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,8 +11,8 @@ interface HabitContextType {
     updateWeeklyFocus: (date: string, text: string) => void;
     weeklyReflections: Record<string, string>;
     updateWeeklyReflections: (date: string, text: string) => void;
-    addHabit: (title: string, target?: number, specificDate?: string) => void;
-    removeHabit: (id: string) => void;
+    addHabit: (title: string, target?: number, specificDate?: string, startDate?: string) => void;
+    removeHabit: (id: string, date?: string) => void;
     skipHabit: (date: string, habitId: string) => void;
     updateHabit: (id: string, newTitle: string, newTarget?: number) => void;
     incrementHabit: (date: string, habitId: string) => void;
@@ -22,6 +22,7 @@ interface HabitContextType {
     addWeeklyTask: (title: string, date: string) => void;
     toggleWeeklyTask: (id: string) => void;
     toggleWeeklyTaskImportance: (id: string) => void;
+    toggleWeeklyTaskStar: (id: string, date: string) => void;
     removeWeeklyTask: (id: string) => void;
     moveHabit: (id: string, direction: 'up' | 'down') => void;
     reorderHabits: (newHabits: Habit[]) => void;
@@ -44,6 +45,66 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     const [weeklyReflections, setWeeklyReflections] = useLocalStorage<Record<string, string>>('jdih_weekly_reflections', {});
     const [tempMessage, setTempMessage] = useState<string | null>(null);
     const timeoutRef = useRef<any>(null); // Use any to avoid environment issues
+
+    // Seed initial Weekly Tasks & Fix State
+    useEffect(() => {
+        // 1. Seed if empty
+        if (weeklyTasks.length === 0) {
+            const today = new Date().toISOString().split('T')[0];
+            const getWeekStart = (dateStr: string) => {
+                const d = new Date(dateStr);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                const monday = new Date(d.setDate(diff));
+                return monday.toISOString().split('T')[0];
+            };
+            const weekStart = getWeekStart(today);
+
+            setWeeklyTasks([
+                {
+                    id: uuidv4(),
+                    title: "Du är bäst! ⭐",
+                    weekStart,
+                    isCompleted: true,
+                    isImportant: false
+                },
+                {
+                    id: uuidv4(),
+                    title: "Kärleksfull påminnelse",
+                    weekStart,
+                    isCompleted: true,
+                    isImportant: true
+                },
+                {
+                    id: uuidv4(),
+                    title: "Sikta mot stjärnorna",
+                    weekStart,
+                    isCompleted: false,
+                    isImportant: false,
+                    starredDates: [today]
+                }
+            ]);
+        } else {
+            // 2. Migration: Force "Du är bäst!" and "Kärleksfull påminnelse" to be completed if they exist but are false
+            // This ensures existing users see the update
+            const needsUpdate = weeklyTasks.some(t =>
+                (t.title === "Du är bäst! ⭐" || t.title === "Kärleksfull påminnelse") && !t.isCompleted
+            );
+
+            if (needsUpdate) {
+                setWeeklyTasks(weeklyTasks.map(t => {
+                    if (t.title === "Du är bäst! ⭐" || t.title === "Kärleksfull påminnelse") {
+                        return { ...t, isCompleted: true };
+                    }
+                    return t;
+                }));
+            }
+        }
+    }, [weeklyTasks.length]); // Note: Adding weeklyTasks as dependency might cause loop if we setWeeklyTasks. 
+    // Ideally we run this once or check carefully. 
+    // The safe way is to depend on weeklyTasks.length for empty check, 
+    // but for migration we might need to be careful.
+    // Let's rely on the fact that once set to true, needsUpdate is false, so it stabilizes.
 
     const showTemporaryMessage = (msg: string) => {
         if (timeoutRef.current) {
@@ -69,18 +130,18 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const addHabit = (title: string, target: number = 1, specificDate?: string) => {
-        const newHabit: Habit = { id: uuidv4(), title, target, archived: false, specificDate };
+    const addHabit = (title: string, target: number = 1, specificDate?: string, startDate?: string) => {
+        const newHabit: Habit = { id: uuidv4(), title, target, archived: false, specificDate, startDate };
         setHabits([...habits, newHabit]);
     };
 
-    const removeHabit = (id: string) => {
+    const removeHabit = (id: string, date?: string) => {
         // Check if habit has ever been used (progress > 0) in any entry
         const hasHistory = Object.values(entries).some(entry => (entry.progress?.[id] || 0) > 0);
 
         if (hasHistory) {
-            // Archive it
-            setHabits(habits.map(h => h.id === id ? { ...h, archived: true } : h));
+            // Archive it and set end date if provided (defaults to today/now context if not, but should be passed)
+            setHabits(habits.map(h => h.id === id ? { ...h, archived: true, endDate: date } : h));
         } else {
             // Hard delete
             setHabits(habits.filter((h) => h.id !== id));
@@ -272,6 +333,22 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         setWeeklyTasks(weeklyTasks.map(t => t.id === id ? { ...t, isImportant: !t.isImportant } : t));
     };
 
+    const toggleWeeklyTaskStar = (id: string, date: string) => {
+        setWeeklyTasks(weeklyTasks.map(t => {
+            if (t.id !== id) return t;
+
+            const currentStars = t.starredDates || [];
+            const isStarred = currentStars.includes(date);
+
+            return {
+                ...t,
+                starredDates: isStarred
+                    ? currentStars.filter(d => d !== date)
+                    : [...currentStars, date]
+            };
+        }));
+    };
+
     const removeWeeklyTask = (id: string) => {
         setWeeklyTasks(weeklyTasks.filter(t => t.id !== id));
     };
@@ -304,6 +381,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 addWeeklyTask,
                 toggleWeeklyTask,
                 toggleWeeklyTaskImportance,
+                toggleWeeklyTaskStar,
                 removeWeeklyTask,
                 moveHabit,
                 reorderHabits,

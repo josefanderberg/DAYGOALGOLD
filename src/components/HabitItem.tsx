@@ -11,9 +11,10 @@ interface HabitItemProps {
     onRemove: () => void;
     onEdit: () => void;
     onReset?: () => void;
+    isEditing?: boolean;
 }
 
-export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onReset }: HabitItemProps) {
+export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onReset, isEditing = false }: HabitItemProps) {
     const isCompleted = progress >= (habit.target || 1);
     const target = habit.target || 1;
     const dragControls = useDragControls();
@@ -28,8 +29,9 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onRe
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
             className={clsx(
-                "group flex items-center gap-4 py-4 border-b border-gray-100 last:border-0 bg-white relative",
-                habit.archived && "opacity-60 grayscale"
+                "group flex items-center gap-4 py-4 border-b border-gray-100 last:border-0 bg-white relative transition-all duration-300",
+                habit.archived && !isCompleted && "opacity-60 grayscale",
+                habit.archived && isCompleted && "border-amber-100 bg-amber-50/50"
             )}
         // Note: bg-white is important for drag opacity/feel
         >
@@ -84,11 +86,17 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onRe
                     <span
                         className={clsx(
                             "text-base font-medium transition-all duration-300 select-none",
-                            isCompleted ? "text-gray-400 line-through decoration-gray-300 decoration-2" : "text-gray-800"
+                            isCompleted && !habit.archived ? "text-gray-400 line-through decoration-gray-300 decoration-2" : "text-gray-800",
+                            isCompleted && habit.archived && "text-amber-900/70 italic"
                         )}
                     >
                         {habit.title}
                     </span>
+                    {habit.archived && isCompleted && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 bg-amber-100 px-2 py-0.5 rounded-full ml-2 self-center">
+                            History
+                        </span>
+                    )}
                     {progress > target && (
                         <button
                             onClick={(e) => {
@@ -104,8 +112,11 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onRe
                 </div>
             </div>
 
-            {/* Hover Controls */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Controls - Visible when Editing or Hovering (Desktop) */}
+            <div className={clsx(
+                "flex items-center gap-1 transition-opacity",
+                isEditing ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            )}>
                 {/* Drag Handle */}
                 <div
                     className="p-2 text-gray-300 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none"

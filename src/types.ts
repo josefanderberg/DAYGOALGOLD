@@ -4,6 +4,8 @@ export interface Habit {
     target: number; // Default 1
     archived?: boolean;
     specificDate?: string; // YYYY-MM-DD - If set, only visible on this date
+    startDate?: string; // YYYY-MM-DD - Visible on or after this date
+    endDate?: string; // YYYY-MM-DD - Visible on or before this date (if archived)
 }
 export interface WeeklyTask {
     id: string;
@@ -11,6 +13,7 @@ export interface WeeklyTask {
     isCompleted: boolean;
     weekStart: string; // ISO Date string of the Monday
     isImportant?: boolean;
+    starredDates?: string[]; // Array of YYYY-MM-DD dates where this task is starred
 }
 
 export interface Note {
