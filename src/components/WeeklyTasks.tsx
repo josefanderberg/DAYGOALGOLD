@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
-import { Plus, Trash2, Check, Star } from 'lucide-react';
+import { Plus, Trash2, Check, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { format } from 'date-fns';
@@ -11,7 +11,7 @@ interface WeeklyTasksProps {
 }
 
 export function WeeklyTasks({ date }: WeeklyTasksProps) {
-    const { weeklyTasks, addWeeklyTask, toggleWeeklyTask, removeWeeklyTask, toggleWeeklyTaskImportance } = useHabits();
+    const { weeklyTasks, addWeeklyTask, toggleWeeklyTask, removeWeeklyTask, toggleWeeklyTaskImportance, showTemporaryMessage } = useHabits();
     const { t, dateLocale } = useLanguage();
     const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -47,7 +47,7 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-bold font-hand text-gray-800">TO DO</h3>
+                    <h3 className="text-lg font-bold font-hand text-gray-800">LOVE TO DO</h3>
                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">{weekRange}</p>
                 </div>
                 <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
@@ -63,7 +63,7 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                             animate={{ opacity: 1 }}
                             className="text-sm text-gray-400 italic text-center py-2"
                         >
-                            No goals for this week yet.
+                            {t('noGoals')}
                         </motion.p>
                     )}
                     {currentWeekTasks.map((task) => (
@@ -76,27 +76,37 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                             className="group flex items-center gap-3"
                         >
                             <button
-                                onClick={() => toggleWeeklyTask(task.id)}
+                                onClick={() => {
+                                    if (!task.isCompleted && task.isImportant) {
+                                        showTemporaryMessage(task.title);
+                                    }
+                                    toggleWeeklyTask(task.id);
+                                }}
                                 className={clsx(
                                     "w-5 h-5 rounded border flex items-center justify-center transition-all duration-200",
                                     task.isCompleted
-                                        ? (task.isImportant ? "bg-yellow-400 border-yellow-400" : "bg-green-500 border-green-500")
+                                        ? (task.isImportant ? "bg-red-400 border-red-400" : "bg-green-500 border-green-500")
                                         : "border-gray-300 hover:border-gray-400 text-transparent",
                                     task.isCompleted ? "text-white" : ""
                                 )}
                             >
                                 {task.isCompleted && task.isImportant ? (
-                                    <Star size={12} fill="white" stroke="white" />
+                                    <Heart size={12} fill="white" stroke="white" />
                                 ) : (
                                     <Check size={12} strokeWidth={3} />
                                 )}
                             </button>
 
                             <span
-                                onClick={() => toggleWeeklyTask(task.id)}
+                                onClick={() => {
+                                    if (!task.isCompleted && task.isImportant) {
+                                        showTemporaryMessage(task.title);
+                                    }
+                                    toggleWeeklyTask(task.id);
+                                }}
                                 className={clsx(
                                     "flex-1 text-sm font-medium transition-all cursor-pointer select-none",
-                                    task.isCompleted ? "text-gray-400 line-through" : "text-gray-700"
+                                    task.isCompleted ? "text-gray-800" : "text-gray-700"
                                 )}
                             >
                                 {task.title}
@@ -107,12 +117,12 @@ export function WeeklyTasks({ date }: WeeklyTasksProps) {
                                 <button
                                     onClick={() => toggleWeeklyTaskImportance(task.id)}
                                     className={clsx(
-                                        "p-1.5 text-gray-300 hover:text-yellow-400 transition-colors",
-                                        task.isImportant && "text-yellow-400 opacity-100" // Always show star if selected
+                                        "p-1.5 text-gray-300 hover:text-red-400 transition-colors",
+                                        task.isImportant && "text-red-400 opacity-100" // Always show heart if selected
                                     )}
-                                    title="Mark as Important"
+                                    title="Mark as Love To Do"
                                 >
-                                    <Star size={16} fill={task.isImportant ? "currentColor" : "none"} />
+                                    <Heart size={16} fill={task.isImportant ? "currentColor" : "none"} />
                                 </button>
 
                                 <button

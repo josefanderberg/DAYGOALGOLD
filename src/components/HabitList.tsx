@@ -19,10 +19,12 @@ export function HabitList({ date }: HabitListProps) {
         addHabit,
         removeHabit,
         incrementHabit,
+        setHabitProgress,
         getCreateDayEntry,
         updateHabit,
         reorderHabits,
-        skipHabit
+        skipHabit,
+        showRandomLoveMessage
     } = useHabits();
     const { t } = useLanguage();
 
@@ -94,6 +96,16 @@ export function HabitList({ date }: HabitListProps) {
         reorderHabits([...newOrder, ...hiddenHabits]);
     };
 
+    const handleIncrement = (habit: Habit) => {
+        const currentProgress = dayEntry.progress?.[habit.id] || 0;
+        const target = habit.target || 1;
+        // Check if this increment will complete the habit
+        if (currentProgress < target && currentProgress + 1 >= target) {
+            showRandomLoveMessage();
+        }
+        incrementHabit(date, habit.id);
+    };
+
     return (
         <>
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -121,7 +133,8 @@ export function HabitList({ date }: HabitListProps) {
                             key={habit.id}
                             habit={habit}
                             progress={dayEntry.progress?.[habit.id] || 0}
-                            onIncrement={() => incrementHabit(date, habit.id)}
+                            onIncrement={() => handleIncrement(habit)}
+                            onReset={() => setHabitProgress(date, habit.id, 0)}
                             onRemove={() => setDeletingHabit(habit)}
                             onEdit={() => openEdit(habit)}
                         />

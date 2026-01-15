@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, useRef, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { type Habit, type DayEntry, type WeeklyTask, type Note, INITIAL_HABITS } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,6 +16,7 @@ interface HabitContextType {
     skipHabit: (date: string, habitId: string) => void;
     updateHabit: (id: string, newTitle: string, newTarget?: number) => void;
     incrementHabit: (date: string, habitId: string) => void;
+    setHabitProgress: (date: string, habitId: string, value: number) => void;
     updateDayField: (date: string, field: keyof DayEntry, value: string) => void;
     getCreateDayEntry: (date: string) => DayEntry;
     addWeeklyTask: (title: string, date: string) => void;
@@ -28,6 +29,9 @@ interface HabitContextType {
     removeNote: (date: string, noteId: string) => void;
     reorderNotes: (date: string, newNotes: Note[]) => void;
     resetDay: (date: string) => void;
+    tempMessage: string | null;
+    showTemporaryMessage: (msg: string) => void;
+    showRandomLoveMessage: () => void;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -38,6 +42,32 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     const [weeklyTasks, setWeeklyTasks] = useLocalStorage<WeeklyTask[]>('jdih_weekly_tasks', []);
     const [weeklyFocus, setWeeklyFocus] = useLocalStorage<Record<string, string>>('jdih_weekly_focus', {});
     const [weeklyReflections, setWeeklyReflections] = useLocalStorage<Record<string, string>>('jdih_weekly_reflections', {});
+    const [tempMessage, setTempMessage] = useState<string | null>(null);
+    const timeoutRef = useRef<any>(null); // Use any to avoid environment issues
+
+    const showTemporaryMessage = (msg: string) => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        setTempMessage(msg);
+        timeoutRef.current = setTimeout(() => {
+            setTempMessage(null);
+        }, 3000);
+    };
+
+    const showRandomLoveMessage = () => {
+        // Filter tasks that are marked as important (Love To Do) AND Completed
+        // User wants only checked items to be visible "up there" as rewards.
+        const pool = weeklyTasks.filter(t => t.isImportant && t.isCompleted);
+
+        if (pool.length > 0) {
+            const randomTask = pool[Math.floor(Math.random() * pool.length)];
+            showTemporaryMessage(randomTask.title);
+        } else {
+            // Fallback if no Love To Do tasks are completed yet
+            showTemporaryMessage("Klara en Love To Do! ❤️");
+        }
+    };
 
     const addHabit = (title: string, target: number = 1, specificDate?: string) => {
         const newHabit: Habit = { id: uuidv4(), title, target, archived: false, specificDate };
@@ -141,6 +171,30 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    const setHabitProgress = (date: string, habitId: string, value: number) => {
+        const entry = getCreateDayEntry(date);
+
+        // Determine if completed based on new value
+        const habit = habits.find(h => h.id === habitId);
+        const target = habit?.target || 1;
+
+        setEntries({
+            ...entries,
+            [date]: {
+                ...entry,
+                progress: {
+                    ...entry.progress,
+                    [habitId]: value
+                },
+                completedHabits: value >= target
+                    ? [...(entry.completedHabits || []).filter(id => id !== habitId), habitId]
+                    : (entry.completedHabits || []).filter(id => id !== habitId)
+            },
+        });
+    };
+
+
+
     const updateDayField = (date: string, field: keyof DayEntry, value: string) => {
         const entry = getCreateDayEntry(date);
         setEntries({
@@ -240,6 +294,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 skipHabit,
                 updateHabit,
                 incrementHabit,
+                setHabitProgress,
                 updateDayField,
                 getCreateDayEntry,
                 weeklyFocus,
@@ -255,7 +310,10 @@ export function HabitProvider({ children }: { children: ReactNode }) {
                 addNote,
                 removeNote,
                 reorderNotes,
-                resetDay
+                resetDay,
+                tempMessage,
+                showTemporaryMessage,
+                showRandomLoveMessage
             }}
         >
             {children}

@@ -44,6 +44,7 @@ const dictionary: Translations = {
     'dailyActions': { en: 'Daily Actions', sv: 'Dagliga Åtgärder' },
     'removeForToday': { en: 'Only Today', sv: 'Bara idag' },
     'deleteForever': { en: 'Delete', sv: 'Radera' },
+    'noGoals': { en: 'No goals for this week yet.', sv: 'Inga mål för denna vecka än.' },
 };
 
 interface LanguageContextType {

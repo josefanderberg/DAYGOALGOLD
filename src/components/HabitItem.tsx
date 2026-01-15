@@ -10,9 +10,10 @@ interface HabitItemProps {
     onIncrement: () => void;
     onRemove: () => void;
     onEdit: () => void;
+    onReset?: () => void;
 }
 
-export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: HabitItemProps) {
+export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit, onReset }: HabitItemProps) {
     const isCompleted = progress >= (habit.target || 1);
     const target = habit.target || 1;
     const dragControls = useDragControls();
@@ -89,9 +90,16 @@ export function HabitItem({ habit, progress, onIncrement, onRemove, onEdit }: Ha
                         {habit.title}
                     </span>
                     {progress > target && (
-                        <span className="text-xs font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onReset) onReset();
+                            }}
+                            className="text-xs font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full hover:bg-green-100 transition-colors z-10 relative"
+                            title="Reset count"
+                        >
                             +{progress - target}
-                        </span>
+                        </button>
                     )}
                 </div>
             </div>
